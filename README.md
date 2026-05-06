@@ -35,7 +35,7 @@
 | :---: | :---: | :---: |
 | ![小米插件](./assets/Mi.png) | ![原生界面](./assets/ZTE.png) | ![增强界面](./assets/me.png) |
 
-<a href="https://www.bilibili.com/video/BVxxxxxxx" target="_blank">
+<a href="https://www.bilibili.com/video/BV1PtR7B8ECC" target="_blank">
   <img src="https://img.shields.io/badge/Bilibili-观看演示视频-FF8EB3?style=for-the-badge&logo=bilibili&logoColor=white" height="72">
 </a>
 
