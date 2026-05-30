@@ -4,9 +4,11 @@
 
 *ZTE-Stat_Max* & *GBNPA-Router-Sync* 是由 **哥哥科技** 开发的一套网络数据遥测与多端转发解决方案。
 
-本自定义集成通过“油猴脚本截留 + Webhook 异步推送”的组合架构，在不破坏官方原有拓扑、不触发中兴路由器“Web 后台单会话互踢”机制的前提下，将路由器底层的高精度流量数据与设备状态无缝接入 Home Assistant。为网络工程人员提供长周期的流量统计与全局态势观测能力。
+中兴路由器 × 全屋智能家居平台联动接入插件：Home Assistant 极客集成、UI增强，硬路由NPU最佳伴侣、无需刷机，支持全系ZTE！设备列表平铺化，大屏可视化一点通，你所要的，都在这里，无需频繁切换页面…
 
-它配合前端油猴脚本 [ZTE-Stat_Max](https://github.com/ucxn/ZTE-Stat_Max)，将浏览器端抓取到的高精度网络流量数据，通过 Webhook 单向推送到 Home Assistant 中枢进行持久化存储与展示。
+本自定义集成通过“脚本猫插件截留 + Webhook 异步推送”的组合架构，在不破坏官方原有拓扑、不触发中兴路由器“Web 后台单会话互踢”机制的前提下，将路由器底层的高精度流量数据与设备状态无缝接入 Home Assistant。为网络工程人员提供长周期的流量统计与全局态势观测能力。
+
+配合前端油猴脚本 [ZTE-Stat_Max](https://github.com/ucxn/ZTE-Stat_Max)，将浏览器端抓取到的高精度网络流量数据，通过 Webhook 单向推送到 Home Assistant 中枢进行持久化存储与展示。
 
 无论是全屋大盘的上下行总流量，还是单台设备的实时吞吐状态，都已被解耦并整合至 HA 的标准设备卡片中。无需频繁登录路由器后台，即可在任意移动端或桌面端实时掌控局域网网络状态。
 
@@ -68,10 +70,10 @@ const WEBHOOK_URL = "http://[你的HA可访问IP]:8123/api/webhook/gbnpa_router_
 ## ⚙️ 架构说明与目录结构 (Architecture)
 
 项目包含以下核心组件：
-* `油猴采集脚本.js`：运行于浏览器前端，负责高频采样、数据清洗与 JSON 打包。
+* `ZTE-Stat_Max.js`：运行于浏览器前端，负责高频采样、数据清洗与 JSON 打包。
 * `__init__.py`：HA 集成入口，负责注册 Webhook、管理全局内存字典与分发更新信号。
 * `sensor.py`：实体生成引擎，负责动态发现内网新节点、创建流量传感器并定义数据保护策略。
-* `brand/`：存放 UI 渲染所需的定制化 Logo 与横幅静态资源。
+
 
 ## ⚠️ 注意事项 (Notes)
 
@@ -81,9 +83,9 @@ const WEBHOOK_URL = "http://[你的HA可访问IP]:8123/api/webhook/gbnpa_router_
 
 ## 📄 协议 (License)
 
-详见对应仓库。
+详见 </kbd>**[ZTE-Stat_HA](https://github.com/ucxn/ZTE-Stat_HA)**</kbd> 对应仓库。
 
-特别声明：**主项目[ZTE-Stat_Max](https://github.com/ucxn/ZTE-Stat_Max)** 保持独立，依然为 GPL 3.0 or later.
+特别声明：**主项目 [ZTE-Stat_Max](https://github.com/ucxn/ZTE-Stat_Max)** 保持独立，依然为 AGPL 3.0 or later.
 
 ---
 *Authored by 哥哥科技*

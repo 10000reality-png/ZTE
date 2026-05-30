@@ -1,10 +1,10 @@
 # ZTE-Stat_Max by Brother Tech
 
 [![Version](https://img.shields.io/badge/version-5.9.9g-orange.svg?logo=github&logoColor=white)](https://github.com/ucxn/ZTE-Stat_Max)&emsp;&nbsp;
-[![License: GPL 3.0](https://img.shields.io/badge/License-GPL_3.0-blue.svg?logo=gnu&logoColor=white)](https://www.gnu.org/licenses/gpl-3.0.html)
+[![License: AGPL 3.0](https://img.shields.io/badge/License-AGPL_3.0-blue.svg?logo=gnu&logoColor=white)](https://www.gnu.org/licenses/gpl-3.0.html)
 
 [![Platform](https://img.shields.io/badge/platform-Web--JS-green.svg?logo=javascript&logoColor=white)](https://scriptcat.org/zh-CN)&nbsp;&emsp;
-[![Integration](https://img.shields.io/badge/Integration-Home_Assistant-41BDF5.svg?logo=homeassistant&logoColor=white)](https://github.com/ucxn/ZTE-Stat_Max/releases?q=ha-&expanded=true)
+[![Integration](https://img.shields.io/badge/Integration-Home_Assistant-41BDF5.svg?logo=homeassistant&logoColor=white)](https://github.com/ucxn/ZTE-Stat_HA)
 
 **English** | [简体中文](README.md)
 
@@ -14,7 +14,9 @@
 
 By taking over the underlying XML API data stream of the native Vue framework, this script reconstructs the UI layout of the "Network Management" and "Connected Devices" pages without breaking the official topology and structure. It introduces trapezoidal integration algorithms, an abnormal traffic radar, and a dual-track traffic alignment display, providing an dashboard for network engineers and power users.
 
-A Web UI enhancement plugin for ZTE routers created by "Brother Tech(哥哥科技)" Verified compatible with: Nebula MAX Whole-House 2.5G Wired Main Router / BE 5100Pro+! Separately tracks uplink and downlink traffic, displays traffic ratio and up/down proportions, and combats P2P/PCDN upstream theft. Supports both 1000/1024 base systems and Mbps/GiB units. Enables global comparison between LAN and WAN traffic! Features a flattened device list for instant big-screen visualization. Everything you need is right here—no more tedious menu switching...
+ZTE Web UI Enhancement × Smart Home Platform Integration by "Brother Tech(哥哥科技)" Verified compatible with: Nebula MAX Whole-House 2.5G Wired Main Router / BE 5100Pro+!Home Assistant plugin integration & UI enhancement.
+
+Separately tracks uplink and downlink traffic, displays traffic ratio and up/down proportions, and combats P2P/PCDN upstream leeching. Supports mutiple base systems and Mbps/GiB units. Enables global comparison between LAN and WAN traffic! Features a flattened device list for instant big-screen visualization. Everything you need is right here—no more tedious menu switching...
 
 While the official Web dashboard is stable, its UX design for data visualization has some friction. For instance, real-time network speeds and historical accumulated traffic for devices are hidden behind secondary menus. You have to frequently click into specific devices to view them, making it impossible to form an intuitive, global comparison. The core purpose of this plugin is to "flatten" these hierarchies. It extracts the up/down network speeds of individual devices, the integrated traffic during the current session, and the underlying total accumulated throughput, pushing them all to the forefront of the main device list. Without any extra clicks, the network throughput status of all devices is clear at a glance.
 
@@ -124,7 +126,7 @@ Utilizing the Tampermonkey environment, the script makes concurrent requests to 
 
 ## 📄 License
 
-[GNU-GPL 3.0](https://www.gnu.org/licenses/gpl-3.0.html)
+[GNU-Affero-GPL 3.0](https://www.gnu.org/licenses/agpl-3.0.html)
 
 ---
 *Authored by Brother Tech*

@@ -1,9 +1,9 @@
 # ZTE-Stat_Max by 哥哥科技
 
-[![Version](https://img.shields.io/badge/version-5.9.9d-orange.svg?logo=github&logoColor=white)](https://github.com/ucxn/ZTE-Stat_Max)&emsp;&nbsp;
-[![License: GPL 3.0](https://img.shields.io/badge/License-GPL_3.0-blue.svg?logo=gnu&logoColor=white)](https://www.gnu.org/licenses/gpl-3.0.html)&nbsp;&emsp;
+[![Version](https://img.shields.io/badge/version-5.9.9G-orange.svg?logo=github&logoColor=white)](https://github.com/ucxn/ZTE-Stat_Max)&emsp;&nbsp;
+[![License: AGPL 3.0](https://img.shields.io/badge/License-AGPL_3.0-blue.svg?logo=gnu&logoColor=white)](https://www.gnu.org/licenses/gpl-3.0.html)&nbsp;&emsp;
 [![Platform](https://img.shields.io/badge/platform-Web-green.svg?logo=javascript&logoColor=white)](https://scriptcat.org/zh-CN)&nbsp;&emsp;
-[![Integration](https://img.shields.io/badge/集成-Home_Assistant-41BDF5.svg?logo=homeassistant&logoColor=white)](https://github.com/ucxn/ZTE-Stat_Max/releases?q=ha-&expanded=true)
+[![Integration](https://img.shields.io/badge/集成-Home_Assistant-41BDF5.svg?logo=homeassistant&logoColor=white)](https://github.com/ucxn/ZTE-Stat_HA)
 
 [English](README_EN.md) | **简体中文**
 
@@ -11,7 +11,7 @@
 
 本程序通过接管原生 Vue 框架的底层 XML API 数据流，在不破坏官方原有拓扑与结构的前提下，重构了“组网管理”与“接入设备”页面的 UI 布局。引入了梯形积分算法、异常流量雷达以及双轨制流量对齐显示，为网络工程人员和进阶玩家提供。
 
-中兴路由器Web UI增强插件（作者：哥哥科技），已验证：星云MAX全屋2.5G有线主路由/BE 5100Pro+ ！分别统计上下行流量，查看流量占比速率、上下比值，打击P2P偷上行，支持1000/1024进制，支持Mbps/GiB，可统计内网和公网作对比！设备列表平铺化，大屏可视化一点通，你所要的，都在这里，无需频繁切换页面…
+路由器Web UI增强 × 智能家居平台联动接入（作者：哥哥科技），Home Assistant 插件集成、UI增强，中兴伴侣，支持全系ZTE！统计流量，查看占比速率、上下行比值，打击P2P偷上行，支持1000/1024进制，支持Mbps/GiB，可统计内网和公网作对比！设备列表平铺化，大屏可视化一点通，你所要的，都在这里，无需频繁切换页面…
 
 ## [点击一键安装](https://github.com/ucxn/ZTE-Stat_Max#%E8%84%9A%E6%9C%AC%E5%AE%89%E8%A3%85)&emsp;&nbsp;&emsp;[![Bilibili](https://img.shields.io/badge/Bilibili-观看演示视频-FF8EB3?style=for-the-badge&logo=bilibili&logoColor=white)](https://www.bilibili.com/video/BV1PtR7B8ECC)
 
@@ -122,7 +122,7 @@ const CONFIG = {
 
 ## 📄 协议 (License)
 
-[GNU-GPL 3.0](https://www.gnu.org/licenses/gpl-3.0.html)
+[GNU-Affero GPL 3.0](https://www.gnu.org/licenses/agpl-3.0.html)
 
 ---
 *Authored by 哥哥科技*
