@@ -484,6 +484,7 @@ const calcStageRatio = (W, L_int, L_hp) => {
       let mn = document.querySelector('.el-table') || document.querySelector('.config-item')?.closest('div') || document.querySelector('.main-content');
       if (mn && bd.parentNode !== mn.parentNode) mn.parentNode.insertBefore(bd, mn);
     }
+    requestAnimationFrame(() => {
     let oDC = Object.create(null);
     if (!iPO) {
       const M_RX = /([a-fA-F0-9]{2}[:-]){5}[a-fA-F0-9]{2}/;
@@ -503,7 +504,6 @@ const calcStageRatio = (W, L_int, L_hp) => {
         if (m) oDC[m] = n;
       }
     }
-    requestAnimationFrame(() => {
       if (bd.parentNode) {
         bd.querySelector('#gb-wan-up-bytes').textContent = `🔼 ${fBy(wU)}`;
         bd.querySelector('#gb-wan-down-bytes').textContent = `🔽 ${fBy(wD)}`;

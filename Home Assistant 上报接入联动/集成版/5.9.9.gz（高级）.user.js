@@ -501,6 +501,7 @@ const calcStageRatio = (W, L_int, L_hp) => {
       let mn = document.querySelector('.el-table') || document.querySelector('.config-item')?.closest('div') || document.querySelector('.main-content');
       if (mn && bd.parentNode !== mn.parentNode) mn.parentNode.insertBefore(bd, mn);
     }
+requestAnimationFrame(() => {
     let oDC = Object.create(null);
     if (!iPO) {
       const M_RX = /([a-fA-F0-9]{2}[:-]){5}[a-fA-F0-9]{2}/;
@@ -520,7 +521,6 @@ const calcStageRatio = (W, L_int, L_hp) => {
         if (m) oDC[m] = n;
       }
     }
-    requestAnimationFrame(() => {
       if (bd.parentNode) {
         let aW2U = S.hasW2 ? S.w2U : (CONFIG.lanPortMode === 1 ? Phys.wU : undefined), aW2D = S.hasW2 ? S.w2D : (CONFIG.lanPortMode === 1 ? Phys.wD : undefined), aW2TU = S.hasW2 ? S.w2TotUp : (CONFIG.lanPortMode === 1 ? Phys.tU : undefined), aW2TD = S.hasW2 ? S.w2TotDn : (CONFIG.lanPortMode === 1 ? Phys.tD : undefined);
         bd.querySelector('#gb-wan-up-bytes').textContent = `🔼 ${fBy(wU + (aW2U||0))}`;
