@@ -21,7 +21,7 @@
 
 ### [Quick Install OnLine (Click)](https://github.com/ucxn/ZTE-Stat_Max/blob/main/README_EN.md#-installation-guide)&nbsp;&emsp;&nbsp;[![Bilibili](https://img.shields.io/badge/Bilibili-VIDEO-FF8EB3?style=for-the-badge&logo=bilibili&logoColor=white)](https://www.bilibili.com/video/BV1PtR7B8ECC)
 
-![logo](./Home%20Assistant%20上报接入联动/集成版/gbnpa_router/brand/logo.png)
+![logo](./assets/中兴.png)
 
 By taking over the underlying XML API data stream of the native Vue framework, this script reconstructs the UI layout of the "Network Management" and "Connected Devices" pages without breaking the official topology and structure. It introduces trapezoidal integration algorithms, an abnormal traffic radar, and a dual-track traffic alignment display, providing an dashboard for network engineers and power users.
 

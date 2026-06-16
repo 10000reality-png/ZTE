@@ -2,27 +2,28 @@
 // @name            中兴路由器增强 ZTE-Stat_Max
 // @name:en         ZTE-Stat_Max
 // @namespace       ucxn
-// @version         5.9.9Gz
+// @version         5.9.9Gz0
 // @description     哥哥科技 QQ群 680464365
 // @description:en  https://github.com/ucxn/ZTE-Stat_Max
 // @author          哥哥科技 space.bilibili.com/501430041
 // @noframes
-// @icon            https://scriptcat.org/api/v2/resource/image/duygQktL5QjWtkLc
-// @include         http://10.*.*.*
+// @tag             路由器 中兴 网络 监控 统计 数据 可视化 极客 增强 UI HA 智能 定时 后台
+// @icon            https://scriptcat.org/api/v2/resource/image/PD6xhxddlUESIwAV
+// @include         /^https?:\/\/10(\.[0-9]{1,3}){3}(:\d+)?\/.*$/
 // @include         http://192.168.*.*
 // @match           http://zte.home*
 // @include         http://172.16.*
-// @include         https://10.*.*.*
 // @include         https://192.168.*.*
 // @match           https://zte.home*
 // @include         https://172.16.*
-// @run-at          document-start
+// @exclude         *://*/cgi-bin/luci*
 // @grant           GM_setValue
+// @grant           GM_getValue
 // @storageName     GBNPA_Storage
 // @license         AGPL-3.0-or-later
+// @run-at          document-start
 // @updateURL       https://github.com/ucxn/ZTE-Stat_Max/raw/refs/heads/main/new.user.js
 // @downloadURL     https://github.com/ucxn/ZTE-Stat_Max/raw/refs/heads/main/new.user.js
-
 // ==/UserScript==
 
 (function () {
@@ -45,7 +46,7 @@
 
   // ======== [0] 用户极客环境变量配置区 ========
   const CONFIG = {
-    routerIP: "192.168.5.1", // 路由器内网 IP
+    readSaveData: 2, // 【历史记录】 1: 从路由器后台读档 | 0: 新局模式 | 2: 从本地长期历史读档
     forceMeshMode: 1, // 【Mesh探测模式】0: 官方拓扑驱动 | 1: n秒智能等待(默认) | 2: 强制大包抓取(专治阉割、不出数据)
     uiLayout: 1, // 【面板拓扑结构】 0: 经典版 | 1: 详细紧凑版(驾驶舱美学) | 2: 详细平铺版(报表流美学)
     injectMode: 1, // 【UI注入模式】 0: 原生侧边栏(1min)| 1: 优先，10秒悬浮舱(D)| 2: 联动模式| 3：强制模式
@@ -56,7 +57,6 @@
     ratioWarnUp: 0.07, // 重度上传警告阈值 (> 7%)
     ratioExtremeDown: 0.01, // 极端下载判定阈值 (< 1%)
     ratioThreshold: 7, // (仅calcMode=0时有效) 上传占比报警阈值(%)
-    readSaveData: 1, // 【开关切换】 1: 读档模式(继承本次历史量) | 0: 新局模式(从打开网页此刻归零重新计流)
     lanRefreshInterval: 3, // LAN口刷新时间(秒)，用于精准补偿0到唤醒时的瞬时流量
     wanRefreshInterval: 3, // 【新增】WAN口刷新时间(秒)，用于精准补偿0到唤醒时的瞬时流量
     portMap: {
@@ -135,23 +135,27 @@ const W_APIS = [
     return val;}
 
   function fB(bps) {
-		if (bps > 1e9) return `${(bps * 1e-6).toFixed(1)} Mbit/s`;
-        if (bps > 1e6) return `${(bps * 1e-6).toFixed(2)} Mbps`;
+        if (bps > 1e9) return `${Math.round(bps * 1e-6)} Mbit/s`;
+        if (bps > 1e6) return `${(bps * 1e-6).toFixed(1)} Mbps`;
         if (bps > 1e3) return `${(bps * 1e-3).toFixed(1)} Kbps`;
         return `${Math.round(bps)} bps`;
     }
 
   function fBy(bps) {
-        if (bps >= 8388608) return `${(bps / 8388608).toFixed(2)} MiB/s`;
-        if (bps > 8192) return `${(bps / 8192).toFixed(1)} KiB/s`;
-        return `${Math.round(bps / 8)} B/s`;
+        if (bps === 0) return '0  B';
+        if (bps > 8388608) return `${(bps / 8388608).toFixed(2)} MiB/s`;
+        return bps < 8700
+            ? ((bps * 0.001 | 0) === bps * 0.001
+                ? `${['0', '[1/8]', '[2/8]', '[3/8]', '[4/8]', '[5/8]', '[6/8]', '[7/8]', '[1]'][bps * 0.001]} KB/s`
+                : `${(bps * 0.000125).toFixed(2)} KB/s`)
+            : `${(bps / 8192).toFixed(1)} KB/s`;
     }
 
   function fV(bits) {
         if (bits > 83886080000) return `${(bits / 8589934592).toFixed(4)} GiB`;
 		if (bits > 8388608000) return `${(bits / 8388608).toFixed(1)} MiB`;
         if (bits > 8388608) return `${(bits / 8388608).toFixed(4)} MiB`;
-        if (bits > 8192) return `${(bits / 8192).toFixed(3)} KiB`;
+        if (bits > 8192) return `${(bits / 8192).toFixed(2)} KiB`;
         return `${Math.round(bits / 8)} B`;
     }
 
@@ -165,7 +169,7 @@ const W_APIS = [
   function fSV(bits) {
     if (bits >= 84607500288) return `${(bits / 8589934592).toPrecision(4)}G`;
 	if (bits > 8388608000) return `${Math.round(bits / 8388608)}M`;
-    if (bits > 8388608) return `${(bits / 8388608).toFixed(2)}M`;
+    if (bits > 8388608) return `${(bits / 8388608).toPrecision(4)}M`;
     if (bits >= 8192) return `${(bits / 8192).toFixed(1)}K`;
     return `${Math.round(bits / 8)}B`;}
 
@@ -310,12 +314,16 @@ const W_APIS = [
         else if (cWD > 0) { let wED = cWD * 0.5 * CONFIG.wanRefreshInterval; S.wTotDn += wED; S.wZED = (S.wZED || 0) + wED; S.wZEDC = (S.wZEDC || 0) + 1; }
         S.wLT = n;
       }
+      if (CONFIG.readSaveData === 2 && !S.snapLoaded) { try { let sp = typeof GM_getValue !== 'undefined' ? GM_getValue('ha_snapshot') : null; S.snap = sp || {}; if(sp && sp.global) { S.wTotUp = S.wTotUp === 0 ? sp.global.wan_up || 0 : S.wTotUp; S.wTotDn = S.wTotDn === 0 ? sp.global.wan_down || 0 : S.wTotDn; } } catch(e){console.warn(e)} S.snapLoaded = !0; }
       for (const [m, cC] of Object.entries(cI)) {
-      S.cls[m] ??= {
-          upR: cC.upRate, dnR: cC.dnRate, lUT: n, intUp: 0, intDn: 0,
-          uB: CONFIG.readSaveData === 1 ? 0 : cC.offUp, dB: CONFIG.readSaveData === 1 ? 0 : cC.offDn,
+        let spD = (CONFIG.readSaveData === 2 && S.snap && S.snap.devices && S.snap.devices[m]) || null;
+        S.cls[m] ??= {
+          upR: cC.upRate, dnR: cC.dnRate, lUT: n, 
+          intUp: spD ? (spD.integral_up || 0) : 0, intDn: spD ? (spD.integral_down || 0) : 0,
+          uB: CONFIG.readSaveData === 1 ? 0 : (spD ? cC.offUp - (spD.up || 0) : cC.offUp), 
+          dB: CONFIG.readSaveData === 1 ? 0 : (spD ? cC.offDn - (spD.down || 0) : cC.offDn),
           lU: cC.offUp, lD: cC.offDn, aR: !1, dpU: 0, dpD: 0,
-          oU: cC.offUp, oD: cC.offDn // 真实流量
+          oU: cC.offUp, oD: cC.offDn, hU: [], hD: [] // 真实流量
         };
         let cS = S.cls[m],
           dU = cC.offUp - cS.lU,
@@ -395,24 +403,28 @@ const calcStageRatio = (W, L_int, L_hp) => {
       abD = 0,
       curHpU = 0,
       curHpD = 0,
+      tot_cU = 0,
       cln = {};
     for (const [k, s] of Object.entries(S.cls)) {
       let cC = cI[k];
       let cU = Math.max(0, (s.lU || 0) - (s.uB || 0));
       let cD = Math.max(0, (s.lD || 0) - (s.dB || 0));
-      let sessU = CONFIG.readSaveData === 1 ? Math.max(0, cU - (s.oU || 0)) : cU;
-      let sessD = CONFIG.readSaveData === 1 ? Math.max(0, cD - (s.oD || 0)) : cD;
+      let sessU = Math.max(0, (s.lU || 0) - (s.oU || 0));
+      let sessD = Math.max(0, (s.lD || 0) - (s.oD || 0));
+      tot_cU += cU;
       LUp += s.intUp || 0;
       LDn += s.intDn || 0;
-      hpU += sessU; 
-      hpD += sessD;
+      hpU += (CONFIG.readSaveData === 2 ? cU : sessU); 
+      hpD += (CONFIG.readSaveData === 2 ? cD : sessD);
       if (cC) {
-        curHpU += sessU; 
-        curHpD += sessD;
+        curHpU += (CONFIG.readSaveData === 2 ? cU : sessU); 
+        curHpD += (CONFIG.readSaveData === 2 ? cD : sessD);
         tOD += cC.offDn || 0;
       }
-      abU += cC ? (cC.offUp || 0) : (s.lU || 0);
-      abD += cC ? (cC.offDn || 0) : (s.lD || 0);
+      abU += CONFIG.readSaveData === 2 ? sessU : (cC ? (cC.offUp || 0) : (s.lU || 0));
+      abD += CONFIG.readSaveData === 2 ? sessD : (cC ? (cC.offDn || 0) : (s.lD || 0));
+      s.hU.push(cC ? cC.upRate : 0); if (s.hU.length > 30) s.hU.shift();
+      s.hD.push(cC ? cC.dnRate : 0); if (s.hD.length > 30) s.hD.shift();
       cln[k] = {
         up: cU,
         down: cD,
@@ -443,14 +455,16 @@ const calcStageRatio = (W, L_int, L_hp) => {
         });
       } catch(e) {console.warn(e);}
     }
-     S.rTick = ((S.rTick || 0) + 1) & 31;
+    S.rTick = ((S.rTick || 0) + 1) & 15;
     if (S.rTick === 1 || !S.cRT) {
+        S.aWu = (S.wTotUp - (S.lwTU || S.wTotUp)) / ((window.gegeBActivated ? (CONFIG.forceMeshMode === 2 ? 6 : CONFIG.wanRefreshInterval) : 3) << 4); S.lwTU = S.wTotUp;
+        S.aWd = (S.wTotDn - (S.lwTD || S.wTotDn)) / ((window.gegeBActivated ? (CONFIG.forceMeshMode === 2 ? 6 : CONFIG.wanRefreshInterval) : 3) << 4); S.lwTD = S.wTotDn;
         if (S.hasW2) {
             let rU = S.w2TotUp > 0 ? (S.wTotUp / S.w2TotUp) : (S.wTotUp > 0 ? Infinity : 0), rD = S.w2TotDn > 0 ? (S.wTotDn / S.w2TotDn) : (S.wTotDn > 0 ? Infinity : 0);
             let fR = (r) => r === Infinity ? '∞' : (r > 1 ? r.toFixed(2) + 'x' : (r * 100).toPrecision(3) + '%');
             S.cRT = `<span style="font-weight: bold;"><span class="c-up">${fR(rU)}</span>，<span class="c-down">${fR(rD)}</span></span>`;
         } else {
-            let rUp = calcStageRatio(S.wTotUp, LUp, hpU), rDn = calcStageRatio(S.wTotDn, LDn, hpD);
+            let rUp = calcStageRatio((Phys.tU + S.wTotUp) / ((Phys.tU > 0) + (S.wTotUp > 0)) || 0, LUp, hpU), rDn = calcStageRatio((Phys.tD + S.wTotDn) / ((Phys.tD > 0) + (S.wTotDn > 0)) || 0, LDn, hpD);
             S.cRT = `<span style="font-weight: bold;"><span style="color: ${rUp > 1.5 ? '#ff4c00' : (rUp > 1.15 ? '#FF9800' : '#4CAF50')};">${(rUp * 100).toFixed(2)}%</span>，<span style="color: ${rDn > 1.5 ? '#ff4c00' : (rDn > 1.15 ? '#FF9800' : '#4CAF50')};">${(rDn * 100).toFixed(2)}%</span></span>`;
         }
     }
@@ -461,7 +475,7 @@ const calcStageRatio = (W, L_int, L_hp) => {
  let layoutHtml = '';
         if (CONFIG.uiLayout === 1) { // 紧凑版 (驾驶舱)
             layoutHtml = `
-                <div class="geek-row"><span class="geek-label">WAN口速率</span><div class="geek-val-box" style="position:relative;"><span class="c-up geek-fixed-width" id="gb-wan-up-bytes"></span><span class="c-down geek-fixed-width" id="gb-wan-down-bytes"></span><span style="margin-left: 5px;"><span class="c-up" id="gb-wan-up-bps"></span> | <span class="c-down" id="gb-wan-down-bps"></span></span><span id="gb-pwan-vol-container" style="display:none; position:absolute; left:clamp(450px, 60%, 700px); color:#333; font-weight:bold; white-space:nowrap;">副WAN总：<span class="c-up" id="gb-pwan-tot-up"></span> | <span class="c-down" id="gb-pwan-tot-down"></span></span></div><div class="geek-right-box" style="font-weight: normal; color: #666;"><span style="color: #333;">0估算：</span><span id="gb-wan-zero-up"></span>，<span id="gb-wan-zero-down"></span>｜<span id="gb-wan-zero-up-cnt"></span>，<span id="gb-wan-zero-down-cnt"></span></div></div>
+                <div class="geek-row"><span class="geek-label">WAN口速率</span><div class="geek-val-box" style="position:relative;"><span class="c-up geek-fixed-width" id="gb-wan-up-bytes"></span><span class="c-down geek-fixed-width" id="gb-wan-down-bytes"></span><span style="margin-left: 5px;"><span class="c-up" id="gb-wan-up-bps"></span> | <span class="c-down" id="gb-wan-down-bps"></span></span><div id="gb-pwan-vol-container" style="display:none; position:absolute; left:clamp(450px, 60%, 700px); color:#333; white-space:nowrap; flex-direction:column; line-height:1.2; top:-4px;"><span style="font-weight:bold;">副WAN总：<span class="c-up" id="gb-pwan-tot-up"></span> | <span class="c-down" id="gb-pwan-tot-down"></span></span><span style="font-size:12px; font-weight:normal; color:#666;">0补偿：<span id="gb-pwan-zero-up"></span>，<span id="gb-pwan-zero-down"></span>｜<span id="gb-pwan-zero-up-cnt"></span>，<span id="gb-pwan-zero-down-cnt"></span></span></div></div><div class="geek-right-box" style="font-weight: normal; color: #666;"><span style="color: #333;">0估算：</span><span id="gb-wan-zero-up"></span>，<span id="gb-wan-zero-down"></span>｜<span id="gb-wan-zero-up-cnt"></span>，<span id="gb-wan-zero-down-cnt"></span></div></div>
                 <div class="geek-row"><span class="geek-label">局域网代数和</span><div class="geek-val-box"><span class="c-up geek-fixed-width" id="gb-lan-up-bytes"></span><span class="c-down geek-fixed-width" id="gb-lan-down-bytes"></span><span id="gb-pwan-bps-container" style="display:none; margin-left: 5px;"><span class="c-up" id="gb-pwan-bps-up"></span> | <span class="c-down" id="gb-pwan-bps-down"></span></span></div><div class="geek-right-box">实时占比：<span class="c-up" id="gb-perc-up"></span> | <span class="c-down" id="gb-perc-down"></span></div></div>
                 <div class="geek-row"><span class="geek-label">LAN：<span id="gege-pin-btn" class="gege-pin" title="冻结窗格">📌</span></span><div class="geek-val-box"><span class="c-up geek-fixed-width" id="gb-lan-up-vol"></span><span class="c-down geek-fixed-width" id="gb-lan-down-vol"></span><span style="font-weight: bold; margin-left: 5px;">WAN总计：<span class="c-up" id="gb-wan-up-vol"></span> | <span class="c-down" id="gb-wan-down-vol"></span></span></div><div class="geek-right-box">在线高精：<span style="color:#FF6700;" id="gb-cur-up-vol"></span> | <span style="color:#18A058;" id="gb-cur-down-vol"></span></div></div>
                 <div class="geek-row"><span class="geek-label">高精流量统计 -></span><div class="geek-val-box"><span class="c-up geek-fixed-width" id="gb-int-up-vol"></span><span class="c-down geek-fixed-width" id="gb-int-down-vol"></span><span style="font-weight: normal; margin-left: 5px; color:#666;">${S.hasW2?'主次网比':'内外网比'}：<span id="gb-ratio-display"></span></span></div><div class="geek-right-box" style="color: #666;">当前总计：<span style="color:#FF6700;" id="gb-abs-up-vol"></span> | <span style="color:#18A058;" id="gb-abs-down-vol"></span></div></div>`;
@@ -530,10 +544,8 @@ const calcStageRatio = (W, L_int, L_hp) => {
         bd.querySelector('#gb-wan-down-bytes').textContent = `🔽 ${fBy(wD + (aW2D||0))}`;
         bd.querySelector('#gb-wan-up-bps').textContent = `🔼 ${fB(wU)}`;
         bd.querySelector('#gb-wan-down-bps').textContent = `🔽 ${fB(wD)}`;
-        bd.querySelector('#gb-lan-up-bytes').textContent = `🔼 ${fBy(sU)}`;
-        bd.querySelector('#gb-lan-down-bytes').textContent = `🔽 ${fBy(sD)}`;
-        bd.querySelector('#gb-perc-up').textContent = `🔼 ${wU>0?(sU*100/wU).toFixed(1):0.0}%`;
-        bd.querySelector('#gb-perc-down').textContent = `🔽 ${wD>0?(sD*100/wD).toFixed(1):0.0}%`;
+        bd.querySelector('#gb-lan-up-bytes').textContent = `🔼 ${fB(sU)}`;
+        bd.querySelector('#gb-lan-down-bytes').textContent = `🔽 ${fB(sD)}`;
         bd.querySelector('#gb-lan-up-vol').textContent = `🔼 ${fV(LUp)}`;
         bd.querySelector('#gb-lan-down-vol').textContent = `🔽 ${fV(LDn)}`;
         bd.querySelector('#gb-wan-up-vol').textContent = `🔼 ${fV(S.wTotUp)}`;
@@ -542,10 +554,22 @@ const calcStageRatio = (W, L_int, L_hp) => {
         bd.querySelector('#gb-int-down-vol').textContent = `🔽 ${fV(hpD)}`;
         bd.querySelector('#gb-abs-up-vol').textContent = `🔼 ${fV(abU)}`;
         bd.querySelector('#gb-abs-down-vol').textContent = `🔽 ${fV(abD)}`;
+		bd.querySelector('#gb-perc-up').textContent = `🔼 ${((sU * 100) / (Math.max(Phys.wU || 0, wU || 0) || Infinity) || 0).toFixed(1)}%`;
+        bd.querySelector('#gb-perc-down').textContent = `🔽 ${((sD * 100) / (Math.max(Phys.wD || 0, wD || 0) || Infinity) || 0).toFixed(1)}%`;
         let pb = bd.querySelector('#gb-pwan-bps-container'), pv = bd.querySelector('#gb-pwan-vol-container');
         if (aW2U !== undefined) {
             if (pb) { pb.style.display = 'inline'; bd.querySelector('#gb-pwan-bps-up').textContent = '🔼 ' + fB(aW2U); bd.querySelector('#gb-pwan-bps-down').textContent = '🔽 ' + fB(aW2D); }
-            if (pv) { pv.style.display = 'inline'; bd.querySelector('#gb-pwan-tot-up').textContent = '🔼 ' + fV(aW2TU); bd.querySelector('#gb-pwan-tot-down').textContent = '🔽 ' + fV(aW2TD); }
+            if (pv) { 
+                pv.style.display = 'flex'; 
+                bd.querySelector('#gb-pwan-tot-up').textContent = '🔼 ' + fV(aW2TU); 
+                bd.querySelector('#gb-pwan-tot-down').textContent = '🔽 ' + fV(aW2TD); 
+                if (bd.querySelector('#gb-pwan-zero-up')) {
+                    bd.querySelector('#gb-pwan-zero-up').textContent = !Phys.zEU ? '' : fSV(Phys.zEU);
+                    bd.querySelector('#gb-pwan-zero-down').textContent = !Phys.zED ? '' : fSV(Phys.zED);
+                    bd.querySelector('#gb-pwan-zero-up-cnt').textContent = Phys.zEUC || 0;
+                    bd.querySelector('#gb-pwan-zero-down-cnt').textContent = Phys.zEDC || 0;
+                }
+            }
         } else {
             if (pb) pb.style.display = 'none'; if (pv) pv.style.display = 'none';
         }
@@ -582,7 +606,7 @@ const calcStageRatio = (W, L_int, L_hp) => {
             dI.appendChild(bx);
             cache.upBox = bx;
           }
-          let p = hpU > 0 ? (hqU * 100 / hpU) : 0;
+          let p = tot_cU > 0 ? (hqU * 100 / tot_cU) : 0;
           (cache.upVol ??= bx.querySelector('.v-vol')).textContent = fVD(cS.intUp, cC.offUp);
           (cache.upPct ??= bx.querySelector('.v-pct')).textContent = p.toFixed(1) + '%';
           (cache.upBar ??= bx.querySelector('.zte-thin-bar-inner')).style.width = Math.min(p, 100) + '%';
@@ -651,7 +675,7 @@ const calcStageRatio = (W, L_int, L_hp) => {
           if (!enh) {
             sp.querySelectorAll('.connect-up, .connect-down').forEach(n => { n.style.display = 'none'; });
             enh = document.createElement('div'); enh.className = 'zte-enhance-speed';
-            enh.innerHTML = `<div class="zte-bar-wrap zte-bar-up"><span class="v-val"></span><span class="v-pct"></span></div><div class="zte-bar-wrap zte-bar-down"><span class="v-val"></span><span class="v-pct"></span></div>`;
+            enh.innerHTML = `<div class="zte-bar-wrap zte-bar-up"><span class="v-val" style="white-space: nowrap; flex-shrink: 0;"></span><span class="v-spark" style="font-family: monospace; letter-spacing: -2px; font-size: 10px; margin: 0 6px; opacity: 0.65; white-space: pre; flex: 1; overflow: hidden; text-align: right;"></span><span class="v-pct" style="white-space: nowrap; flex-shrink: 0;"></span></div><div class="zte-bar-wrap zte-bar-down"><span class="v-val" style="white-space: nowrap; flex-shrink: 0;"></span><span class="v-spark" style="font-family: monospace; letter-spacing: -2px; font-size: 10px; margin: 0 6px; opacity: 0.65; white-space: pre; flex: 1; overflow: hidden; text-align: right;"></span><span class="v-pct" style="white-space: nowrap; flex-shrink: 0;"></span></div>`;
             sp.appendChild(enh);
             cache.enh = enh;
           }
@@ -660,6 +684,12 @@ const calcStageRatio = (W, L_int, L_hp) => {
               bU = cache.bU ??= enh.querySelector('.zte-bar-up'),
               bD = cache.bD ??= enh.querySelector('.zte-bar-down');
           
+          const SPRK = [' ', '▂', '▃', '▄', '▅', '▆', '▇', '█'];
+          let clU = Math.max(...cS.hU, (S.aWu * 0.1) || 0, 512000);
+          let clD = Math.max(...cS.hD, (S.aWd / 8) || 0);
+          (cache.bUSpk ??= bU.querySelector('.v-spark')).textContent = cS.hU.slice(-15).map(v => SPRK[v <= 0 ? 0 : Math.min(7, Math.ceil((v / clU) * 7))]).join('');
+          (cache.bDSpk ??= bD.querySelector('.v-spark')).textContent = cS.hD.slice(-15).map(v => SPRK[v <= 0 ? 0 : Math.min(7, Math.ceil((v / clD) * 7))]).join('');
+
           bU.style.setProperty('--p-up', Math.min(pu, 100) + '%');
           (cache.bUVal ??= bU.querySelector('.v-val')).textContent = `🔼 ${fBy(cC.upRate)}`;
           (cache.bUPct ??= bU.querySelector('.v-pct')).textContent = pu.toFixed(1) + '%';
@@ -691,7 +721,7 @@ const calcStageRatio = (W, L_int, L_hp) => {
         else hW.push(htm);
       });
       requestAnimationFrame(() => {
-        ol.innerHTML = `<div style="padding: 20px; max-width: 1500px; margin: 0 auto; min-height: 100%;"><div id="gege-board-anchor"></div><div id="config-list" class="config-list gege-list-container"><div class="gege-section"><div class="config-title">有线设备${(window.gegeHiddenDevices && Object.keys(window.gegeHiddenDevices).length > 0) ? '<span style="color: #ff4c00; font-size: 13px; font-weight: normal; margin-left: 10px; font-family: Consolas;">(哥哥科技：智能Mesh适配)</span>' : ''}</div>${hW.join('')||'<div class="gege-empty-state">没有连接设备</div>'}</div><div class="gege-section"><div class="config-title">无线设备（${S.is5G_149?'5.8GHz':'5.2GHz'}）</div>${h52.join('')||'<div class="gege-empty-state">没有连接设备</div>'}</div><div class="gege-section"><div class="config-title">无线设备（${S.is5G_149?'5.2GHz':'5.8GHz'}）</div>${h58.join('')||'<div class="gege-empty-state">没有连接设备</div>'}</div><div class="gege-section"><div class="config-title">无线设备（2.4GHz）</div>${h2.join('')||'<div class="gege-empty-state">没有连接设备</div>'}
+        ol.innerHTML = `<div style="padding: 20px; max-width: 1580px; margin: 0 auto; min-height: 100%;"><div id="gege-board-anchor"></div><div id="config-list" class="config-list gege-list-container"><div class="gege-section"><div class="config-title">有线设备${(window.gegeHiddenDevices && Object.keys(window.gegeHiddenDevices).length > 0) ? '<span style="color: #ff4c00; font-size: 13px; font-weight: normal; margin-left: 10px; font-family: Consolas;">(哥哥科技：智能Mesh适配)</span>' : ''}</div>${hW.join('')||'<div class="gege-empty-state">没有连接设备</div>'}</div><div class="gege-section"><div class="config-title">无线设备（${S.is5G_149?'5.8GHz':'5.2GHz'}）</div>${h52.join('')||'<div class="gege-empty-state">没有连接设备</div>'}</div><div class="gege-section"><div class="config-title">无线设备（${S.is5G_149?'5.2GHz':'5.8GHz'}）</div>${h58.join('')||'<div class="gege-empty-state">没有连接设备</div>'}</div><div class="gege-section"><div class="config-title">无线设备（2.4GHz）</div>${h2.join('')||'<div class="gege-empty-state">没有连接设备</div>'}
         </div><div style="margin-top: 25px; padding-top: 15px; border-top: 1px dashed #eee; text-align: center; font-family: Consolas, 'Microsoft YaHei', sans-serif;"><div style="font-size: 11.5px; color: #777; font-style: italic; margin-bottom: 8px;">“在一个文明社会，干净的、不被监视与吸血的网络，是我们每个人的基本权利。”</div><div style="font-size: 10.5px; color: #999; line-height: 1.3; margin-bottom: 8px;">本交互式程序基于 GNU Affero GPL v3.0 协议开源，按“原样 (AS IS)”提供，不对其适用性、稳定性、精密度或任何商业场景合规性作任何明示或暗示的担保。<br>根据 AGPL-3.0 第 5(d) 及 7(b) 条规定，基于本程序的任何修改均不得移除或篡改本界面的署名与法律声明。保留此界面是使用本软件代码的合法性的前置条件。
         </div><div style="font-size: 12px; color: #555;"><a href="https://github.com/ucxn/ZTE-Stat_Max" target="_blank" style="color: #0059fa; text-decoration: none; font-weight: bold;">ZTE-Stat_Max 增强组件</a> Copyright &copy; 2026 <a href="https://www.bilibili.com/video/BV1PtR7B8ECC" target="_blank" style="color: #0059fa; text-decoration: none; font-weight: bold;">哥哥科技</a> (BroTech)<span style="color: #888; font-weight: normal;"> | All Rights Reserved</span>&emsp;&nbsp;<a href="https://scriptcat.org/zh-CN/script-show-page/6194" target="_blank" style="color: #666; text-decoration: none;">点此分享</a></div></div></div></div>`;
       });}
@@ -890,8 +920,8 @@ const calcStageRatio = (W, L_int, L_hp) => {
             if (Phys.lT === undefined) Phys.lT = n;
             else if (Phys.wU !== u || Phys.wD !== dn) {
               let ms = n - Phys.lT;
-              Phys.tU += Phys.wU > 0 ? (Phys.wU + u) * ms * 0.0005 : (u > 0 ? u * 0.5 * CONFIG.portInterval : 0);
-              Phys.tD += Phys.wD > 0 ? (Phys.wD + dn) * ms * 0.0005 : (dn > 0 ? dn * 0.5 * CONFIG.portInterval : 0);
+              if (Phys.wU > 0) { Phys.tU += (Phys.wU + u) * ms * 0.0005; } else if (u > 0) { Phys.tU += u * 0.5 * CONFIG.portInterval; Phys.zEU = (Phys.zEU || 0) + u * 0.5 * CONFIG.portInterval; Phys.zEUC = (Phys.zEUC || 0) + 1; }
+              if (Phys.wD > 0) { Phys.tD += (Phys.wD + dn) * ms * 0.0005; } else if (dn > 0) { Phys.tD += dn * 0.5 * CONFIG.portInterval; Phys.zED = (Phys.zED || 0) + dn * 0.5 * CONFIG.portInterval; Phys.zEDC = (Phys.zEDC || 0) + 1; }
               Phys.lT = n;
             }
             Phys.wU = u; Phys.wD = dn;

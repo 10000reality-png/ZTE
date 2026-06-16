@@ -22,7 +22,7 @@
 
 路由器Web UI增强 × 智能家居平台联动接入（作者：哥哥科技），Home Assistant 插件集成、UI增强，中兴伴侣，支持全系ZTE！统计流量，查看占比速率、上下行比值，打击P2P偷上行，支持1000/1024进制，支持Mbps/GiB，可统计内网和公网作对比！设备列表平铺化，大屏可视化一点通，你所要的，都在这里，无需频繁切换页面…
 
-![logo](./Home%20Assistant%20上报接入联动/集成版/gbnpa_router/brand/logo.png)
+![logo](./assets/中兴.png)
 
 ## [点击一键安装](https://github.com/ucxn/ZTE-Stat_Max#%E8%84%9A%E6%9C%AC%E5%AE%89%E8%A3%85)&emsp;&nbsp;&emsp;[![Bilibili](https://img.shields.io/badge/Bilibili-观看演示视频-FF8EB3?style=for-the-badge&logo=bilibili&logoColor=white)](https://www.bilibili.com/video/BV1PtR7B8ECC)
 
