@@ -51,6 +51,8 @@
     ratioThreshold: 7, // (仅calcMode=0时有效) 上传占比报警阈值(%)
     lanRefreshInterval: 3, // LAN口刷新时间(秒)，用于精准补偿0到唤醒时的瞬时流量
     wanRefreshInterval: 3, // 【新增】WAN口刷新时间(秒)，用于精准补偿0到唤醒时的瞬时流量
+    宽带最大外网上行速率: 3e8,
+    宽带最大外网下行速率: 24e8, // 配置外网最大上传|下载比特(bit/bps)速率，请略微大于真实值；500兆为5e8，一千兆1e9
     portMap: {
       "eth1": "网口 1",
       "eth2": "网口 2",
@@ -190,8 +192,9 @@ const F_ARR = ['0', '[1/8]', '[2/8]', '[3/8]', '[4/8]', '[5/8]', '[6/8]', '[7/8]
       let o = Object.create(null), pm;
       while ((pm = pRx.exec(im[1])) !== null) {
         o[pm[1]] = pm[2].replaceAll('&#32;', ' ')
-                .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
-                .replace(/&quot;/g, '"').replace(/&apos;/g, "'");
+                .replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+                .replace(/&quot;/g, '"').replace(/&apos;/g, "'")
+                .replace(/&amp;/g, '&');
       }
       list.push(o);
     }
@@ -291,7 +294,6 @@ const F_ARR = ['0', '[1/8]', '[2/8]', '[3/8]', '[4/8]', '[5/8]', '[6/8]', '[7/8]
           cM);
         window.gegeForceUIRedraw = !1;
       }
-      let gDt = (S.lt !== 0) ? (n - S.lt) * 0.001 : 0;
       if (S.wLT === undefined) {
         S.wLT = n;
       }
@@ -318,39 +320,33 @@ const F_ARR = ['0', '[1/8]', '[2/8]', '[3/8]', '[4/8]', '[5/8]', '[6/8]', '[7/8]
           dU = cC.offUp - cS.lU,
           dD = cC.offDn - cS.lD;
         if (dU < 0 || dD < 0) {
-          if (dU < 0) {
-            cS.uB += dU;
-            cS.oU += dU; 
-            cS.dpU = cS.lU;
-          }
-          if (dD < 0) {
-            cS.dB += dD;
-            cS.oD += dD; 
-            cS.dpD = cS.lD;
-          }
-          cS.aR = 3;
-        }
+          if (dU < 0) { cS.uB += dU; cS.oU += dU; cS.dpU = cS.lU; }
+          if (dD < 0) { cS.dB += dD; cS.oD += dD; cS.dpD = cS.lD; }
+          cS.aR = 3;}
+
         else if (cS.aR === 3) {
-          if (dD > 2516582400 || dU > 671088640 || (cS.dpD && dD >= cS.dpD) || (cS.dpU && dU >= cS.dpU)) {
-            cS.uB += dU;
-            cS.oU += dU; 
-            cS.dB += dD;
-            cS.oD += dD; 
-            cS.aR = 2;
-            cS.dpU = 0;
-            cS.dpD = 0;
+          if (dU > 0 || dD > 0) {
+          if (cS.dpU && dU > cS.dpU * 0.975 && cS.dpD && dD > cS.dpD * 0.975) {
+            if (dU <= cS.dpU * 1.1 || dU <= cS.dpU + CONFIG.宽带最大外网上行速率 * CONFIG.lanRefreshInterval) {
+              cS.uB += cS.dpU; cS.oU += cS.dpU;
+              } else {
+                cS.uB += dU; cS.oU += dU;}
+             if (dD <= cS.dpD * 1.1 || dD <= cS.dpD + CONFIG.宽带最大外网下行速率 * CONFIG.lanRefreshInterval) {
+              cS.dB += cS.dpD; cS.oD += cS.dpD;
+              } else {cS.dB += dD; cS.oD += dD;
+              }
+            cS.aR = 2; 
+            } else {
+              cS.aR = 0; 
+            }
+            cS.dpU = 0; cS.dpD = 0; 
           }
         }
        else if (cS.aR > 0) { cS.aR--; }
-        if (cS.aR === 2 || (cS.aR == 1 && cC.upRate > 1e8) || cC.upRate > 6e8) { cSU -= cC.upRate; cC.upRate = 0; }
-        if (cS.aR === 2 || (cS.aR == 1 && cC.dnRate > 1e8) || cC.dnRate > 24e8) { cSD -= cC.dnRate; cC.dnRate = 0; }
-        if (cS.lOS !== cC.onSec) {
+        if (cS.aR === 2 || (cS.aR == 1 && cC.upRate > CONFIG.宽带最大外网上行速率 * 1.3) || cC.upRate > 6e8) { cSU -= cC.upRate; cC.upRate = 0; }
+        if (cS.aR === 2 || (cS.aR == 1 && cC.dnRate > CONFIG.宽带最大外网下行速率 * 1.3) || cC.dnRate > 24e8) { cSD -= cC.dnRate; cC.dnRate = 0; }
           cS.onS = cC.onSec;
-          cS.lOS = cC.onSec;
-        }
-        else {
-          cS.onS = (cS.onS || cC.onSec || 0) + gDt;
-        }
+
         if (cC.upRate !== cS.upR || cC.dnRate !== cS.dnR) {
           let ms = n - cS.lUT;
           if (cS.upR > 0) { cS.intUp += (cS.upR + cC.upRate) * ms * 0.0005; }
@@ -726,7 +722,7 @@ const calcStageRatio = (W, L_int, L_hp) => {
       requestAnimationFrame(() => {
         ol.innerHTML = `<div style="padding: 20px; max-width: 1580px; margin: 0 auto; min-height: 100%;"><div id="gege-board-anchor"></div><div id="config-list" class="config-list gege-list-container"><div class="gege-section"><div class="config-title">有线设备${(window.gegeHiddenDevices && Object.keys(window.gegeHiddenDevices).length > 0) ? '<span style="color: #ff4c00; font-size: 13px; font-weight: normal; margin-left: 10px; font-family: Consolas;">(哥哥科技：智能Mesh适配)</span>' : ''}</div>${hW.join('')||'<div class="gege-empty-state">没有连接设备</div>'}</div><div class="gege-section"><div class="config-title">无线设备（${S.is5G_149?'5.8GHz':'5.2GHz'}）</div>${h52.join('')||'<div class="gege-empty-state">没有连接设备</div>'}</div><div class="gege-section"><div class="config-title">无线设备（${S.is5G_149?'5.2GHz':'5.8GHz'}）</div>${h58.join('')||'<div class="gege-empty-state">没有连接设备</div>'}</div><div class="gege-section"><div class="config-title">无线设备（2.4GHz）</div>${h2.join('')||'<div class="gege-empty-state">没有连接设备</div>'}
         </div><div style="margin-top: 25px; padding-top: 15px; border-top: 1px dashed #eee; text-align: center; font-family: Consolas, 'Microsoft YaHei', sans-serif;"><div style="font-size: 11.5px; color: #777; font-style: italic; margin-bottom: 8px;">“在一个文明社会，干净的、不被监视与吸血的网络，是我们每个人的基本权利。”</div><div style="font-size: 10.5px; color: #999; line-height: 1.3; margin-bottom: 8px;">本交互式程序基于 GNU Affero GPL v3.0 协议开源，按“原样 (AS IS)”提供，不对其适用性、稳定性、精密度或任何商业场景合规性作任何明示或暗示的担保。<br>根据 AGPL-3.0 第 5(d) 及 7(b) 条规定，基于本程序的任何修改均不得移除或篡改本界面的署名与法律声明。保留此界面是使用本软件代码的合法性的前置条件。
-        </div><div style="font-size: 12px; color: #555;"><a href="https://github.com/ucxn/ZTE-Stat_Max" target="_blank" style="color: #0059fa; text-decoration: none; font-weight: bold;">ZTE-Stat_Max 增强组件</a> <span title="构建时间：2026-06.24 22.5时&#10;架构设计：哥哥科技 BroTech&#10;Bilibili UID：501430041&#10;QQ群：680464365" style="cursor:help; border-bottom:1px dotted #ccc; font-family:Consolas;">5.9.9.R</span> | Copyright &copy; 2026 <a href="https://www.bilibili.com/video/BV1PtR7B8ECC" target="_blank" style="color: #0059fa; text-decoration: none; font-weight: bold;">哥哥科技</a> (BroTech)<span style="color: #888; font-weight: normal;"> | All Rights Reserved</span>&emsp;&nbsp;<a href="https://scriptcat.org/zh-CN/script-show-page/6194" target="_blank" style="color: #666; text-decoration: none;">点此分享</a></div></div></div></div>`;
+        </div><div style="font-size: 12px; color: #555;"><a href="https://github.com/ucxn/ZTE-Stat_Max" target="_blank" style="color: #0059fa; text-decoration: none; font-weight: bold;">ZTE-Stat_Max 增强组件</a> <span title="构建时间：2026-06.25 18时&#10;架构设计：哥哥科技 BroTech&#10;Bilibili UID：501430041&#10;QQ群：680464365" style="cursor:help; border-bottom:1px dotted #ccc; font-family:Consolas;">5.9.9.R</span> | Copyright &copy; 2026 <a href="https://www.bilibili.com/video/BV1PtR7B8ECC" target="_blank" style="color: #0059fa; text-decoration: none; font-weight: bold;">哥哥科技</a> (BroTech)<span style="color: #888; font-weight: normal;"> | All Rights Reserved</span>&emsp;&nbsp;<a href="https://scriptcat.org/zh-CN/script-show-page/6194" target="_blank" style="color: #666; text-decoration: none;">点此分享</a></div></div></div></div>`;
       S._domRebuilt = true;});}
     catch (e) {
       requestAnimationFrame(() => {
@@ -943,7 +939,7 @@ async function fPP() {
       let rw = document.getElementById('gb-phys-row'), db = document.getElementById('gb-phys-data');
       if (rw && db) {
         rw.style.display = 'flex';
-        db.innerHTML = Object.entries(Phys.p).map(([k, v]) => `<span style="margin-right:16px; white-space:nowrap; font-weight:normal; color:#333;">${k}:<span class="c-up" style="display:inline-block; min-width:55px; font-weight:bold; margin-left:6px; text-align:left;">${fBy(v.u)}</span><span class="c-down" style="display:inline-block; min-width:55px; font-weight:bold; margin-left:10px; text-align:left;">${fBy(v.dn)}</span><span style="margin-left:6px; color:#666;">(<span style="color:#9c27b0;">${fSV(v.tU)}</span>，<span style="color:#4caf50;">${fSV(v.tD)}</span>)</span></span>`).join('');
+        db.innerHTML = Object.entries(Phys.p).map(([k, v]) => `<span style="margin-right:16px; white-space:nowrap; font-weight:normal; color:#333;">${k}:<span class="c-up" style="display:inline-block; min-width:55px; font-weight:bold; margin-left:6px; text-align:left;">${fBy(v.dn)}</span><span class="c-down" style="display:inline-block; min-width:55px; font-weight:bold; margin-left:10px; text-align:left;">${fBy(v.u)}</span><span style="margin-left:6px; color:#666;">(<span style="color:#9c27b0;">${fSV(v.tD)}</span>，<span style="color:#4caf50;">${fSV(v.tU)}</span>)</span></span>`).join('');
       }
 
       if (CONFIG.lanPortMode === 1 && !S.hasW2 && Phys.wU !== undefined) {
